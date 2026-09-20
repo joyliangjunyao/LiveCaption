@@ -25,8 +25,17 @@ struct CaptionPanel: View {
     var body: some View {
         VStack(spacing: 0) {
             if model.showControls { controls }
-            Divider().opacity(model.showControls ? 0.45 : 0)
             captions
+        }
+        .overlay {
+            if model.lines.isEmpty {
+                Text(emptyCaptionMessage)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(hasCaptionError ? Color.red : Color.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 34)
+                    .allowsHitTesting(false)
+            }
         }
         .background(.ultraThinMaterial)
         .background(Color.black.opacity(max(0, 1 - model.opacity) * 0.65))
@@ -104,11 +113,11 @@ struct CaptionPanel: View {
         guard compactToolbarPopover == nil else { return }
         hideControlsTask?.cancel()
         hideControlsTask = Task {
-            try? await Task.sleep(for: .milliseconds(1_500))
+            try? await Task.sleep(for: .milliseconds(400))
             guard !Task.isCancelled else { return }
             await MainActor.run {
                 guard compactToolbarPopover == nil, !isPointerInsidePanel else { return }
-                withAnimation(.easeIn(duration: 0.2)) {
+                withAnimation(.easeIn(duration: 0.12)) {
                     model.showControls = false
                 }
             }
@@ -415,25 +424,20 @@ struct CaptionPanel: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 12) {
-                    if model.lines.isEmpty {
-                        Text(emptyCaptionMessage)
-                            .font(.system(size: model.fontSize, weight: .medium))
-                            .foregroundStyle(hasCaptionError ? Color.red : Color.secondary)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding(.vertical, 20)
-                    }
                     ForEach(model.lines) { line in
                         VStack(alignment: .leading, spacing: 4) {
                             if model.displayMode.showsCaptions {
-                                Text(line.original)
+                                Text(CaptionTextFormatter.displayText(line.original))
                                     .font(.system(size: model.fontSize, weight: .semibold))
+                                    .lineSpacing(4)
                                     .textSelection(.enabled)
                             }
                             if model.displayMode.showsTranslation {
                                 if line.translationNotNeeded {
                                     if !model.displayMode.showsCaptions {
-                                        Text(line.original)
+                                        Text(CaptionTextFormatter.displayText(line.original))
                                             .font(.system(size: model.translationFontSize))
+                                            .lineSpacing(3)
                                             .foregroundStyle(.white.opacity(0.82))
                                             .textSelection(.enabled)
                                     }
@@ -442,8 +446,9 @@ struct CaptionPanel: View {
                                         .font(.system(size: model.translationFontSize))
                                         .foregroundStyle(model.translationError == nil ? Color.secondary : Color.red)
                                 } else {
-                                    Text(line.translated)
+                                    Text(CaptionTextFormatter.displayText(line.translated))
                                         .font(.system(size: model.translationFontSize))
+                                        .lineSpacing(3)
                                         .foregroundStyle(.white.opacity(0.82))
                                         .textSelection(.enabled)
                                 }
@@ -456,7 +461,7 @@ struct CaptionPanel: View {
                 .padding(14)
             }
             .onChange(of: model.lines) { _, lines in
-                if let id = lines.last?.id { withAnimation { proxy.scrollTo(id, anchor: .bottom) } }
+                if let id = lines.last?.id { proxy.scrollTo(id, anchor: .bottom) }
             }
         }
     }
@@ -699,6 +704,11 @@ private struct WindowConfigurator: NSViewRepresentable {
             window.styleMask.insert(.resizable)
             window.contentMinSize = NSSize(width: CaptionWindowMetrics.minimumWidth,
                                            height: CaptionWindowMetrics.minimumHeight)
+            let currentFrame = window.frame
+            window.setFrame(NSRect(x: currentFrame.minX,
+                                   y: currentFrame.maxY - CaptionWindowMetrics.minimumHeight,
+                                   width: CaptionWindowMetrics.minimumWidth,
+                                   height: CaptionWindowMetrics.minimumHeight), display: true)
             window.standardWindowButton(.closeButton)?.isHidden = true
             window.standardWindowButton(.miniaturizeButton)?.isHidden = true
             window.standardWindowButton(.zoomButton)?.isHidden = true

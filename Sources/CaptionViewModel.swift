@@ -19,8 +19,8 @@ final class CaptionViewModel: ObservableObject {
         }
     }
     @Published var targetLanguage = "zh-Hans" { didSet { saveSettings() } }
-    @Published var fontSize: Double = 22 { didSet { saveSettings() } }
-    @Published var translationFontSize: Double = 18 { didSet { saveSettings() } }
+    @Published var fontSize: Double = 14 { didSet { saveSettings() } }
+    @Published var translationFontSize: Double = 14 { didSet { saveSettings() } }
     @Published var opacity: Double = 0.82 { didSet { saveSettings() } }
     @Published var displayMode: CaptionDisplayMode = .captionsAndTranslation {
         didSet {
@@ -85,8 +85,8 @@ final class CaptionViewModel: ObservableObject {
             ?? documents.appendingPathComponent("LiveCaption", isDirectory: true)
         audioMode = AudioMode(rawValue: defaults.string(forKey: "audioMode") ?? "") ?? .both
         targetLanguage = defaults.string(forKey: "targetLanguage") ?? "zh-Hans"
-        fontSize = defaults.object(forKey: "fontSize") as? Double ?? 22
-        translationFontSize = defaults.object(forKey: "translationFontSize") as? Double ?? 18
+        fontSize = defaults.object(forKey: "fontSize") as? Double ?? 14
+        translationFontSize = defaults.object(forKey: "translationFontSize") as? Double ?? 14
         opacity = defaults.object(forKey: "opacity") as? Double ?? 0.82
         if let savedMode = defaults.string(forKey: "displayMode"),
            let mode = CaptionDisplayMode(rawValue: savedMode) {

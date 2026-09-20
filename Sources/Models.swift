@@ -84,6 +84,15 @@ enum WhisperModel: String, CaseIterable, Identifiable {
     }
 }
 
+enum CaptionTextFormatter {
+    static func displayText(_ text: String) -> String {
+        // Presentation only: do not split English abbreviations, URLs or decimals.
+        text.components(separatedBy: "。").enumerated().map { index, part in
+            index == 0 ? part : "。\n" + part.trimmingCharacters(in: .newlines)
+        }.joined().trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
 struct CaptionLine: Identifiable, Equatable {
     let id = UUID()
     let source: AudioSource

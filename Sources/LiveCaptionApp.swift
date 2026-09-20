@@ -13,7 +13,7 @@ struct LiveCaptionApp: App {
         Window("LiveCaption", id: "caption") {
             CaptionPanel(model: model)
         }
-        .defaultSize(width: 760, height: 260)
+        .defaultSize(width: 340, height: 108)
         .windowStyle(.plain)
         .commands {
             CommandGroup(replacing: .pasteboard) {

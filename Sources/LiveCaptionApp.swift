@@ -10,41 +10,41 @@ struct LiveCaptionApp: App {
     }
 
     var body: some Scene {
-        Window("中文版", id: "caption") {
-            CaptionPanel(model: model)
+        Window("LiveCaption_ZH-CN", id: "caption") {
+            CaptionPanel(model: model).environment(\.locale, Locale(identifier: model.interfaceLanguage.rawValue))
         }
         .defaultSize(width: 340, height: 108)
         .windowStyle(.plain)
         .commands {
             CommandGroup(replacing: .pasteboard) {
-                Button("剪切") {
+                Button(L("剪切")) {
                     NSApp.sendAction(#selector(NSText.cut(_:)), to: nil, from: nil)
                 }
                 .keyboardShortcut("x")
-                Button("复制") {
+                Button(L("复制")) {
                     NSApp.sendAction(#selector(NSText.copy(_:)), to: nil, from: nil)
                 }
                 .keyboardShortcut("c")
-                Button("粘贴") {
+                Button(L("粘贴")) {
                     NSApp.sendAction(#selector(NSText.paste(_:)), to: nil, from: nil)
                 }
                 .keyboardShortcut("v")
                 Divider()
-                Button("全选") {
+                Button(L("全选")) {
                     NSApp.sendAction(#selector(NSText.selectAll(_:)), to: nil, from: nil)
                 }
                 .keyboardShortcut("a")
             }
         }
 
-        MenuBarExtra("中文版", systemImage: model.recording.isRecording
+        MenuBarExtra("LiveCaption_ZH-CN", systemImage: model.recording.isRecording
                      ? "record.circle.fill"
                      : (model.capture.isRunning ? "captions.bubble.fill" : "captions.bubble")) {
-            MenuBarMenu(model: model)
+            MenuBarMenu(model: model).environment(\.locale, Locale(identifier: model.interfaceLanguage.rawValue))
         }
 
         Settings {
-            SettingsView(model: model)
+            SettingsView(model: model).environment(\.locale, Locale(identifier: model.interfaceLanguage.rawValue))
         }
     }
 }

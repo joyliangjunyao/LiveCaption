@@ -21,6 +21,8 @@ struct CaptionPanel: View {
     @State private var hideControlsTask: Task<Void, Never>?
     @State private var compactToolbarPopover: CompactToolbarPopover?
     @State private var isPointerInsidePanel = false
+    @AppStorage("hasChosenInterfaceLanguage") private var hasChosenLanguage = false
+    @State private var showLanguageChoice = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -29,7 +31,7 @@ struct CaptionPanel: View {
         }
         .overlay {
             if model.lines.isEmpty {
-                Text(emptyCaptionMessage)
+                Text(L(emptyCaptionMessage))
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(hasCaptionError ? Color.red : Color.secondary)
                     .multilineTextAlignment(.center)
@@ -73,6 +75,22 @@ struct CaptionPanel: View {
             }
         }
         .onDisappear { hideControlsTask?.cancel() }
+        .onAppear { showLanguageChoice = !hasChosenLanguage }
+        .sheet(isPresented: $showLanguageChoice) {
+            VStack(alignment: .leading, spacing: 20) {
+                Text(L("选择界面语言 / Choose interface language")).font(.headline)
+                Picker(L("界面语言"), selection: $model.interfaceLanguage) {
+                    ForEach(InterfaceLanguage.allCases) { Text($0.title).tag($0) }
+                }
+                Button(L("继续")) {
+                    hasChosenLanguage = true
+                    showLanguageChoice = false
+                }.keyboardShortcut(.defaultAction)
+            }
+            .padding(24)
+            .frame(width: 420)
+            .interactiveDismissDisabled()
+        }
         .background(WindowConfigurator(opacity: model.opacity) {
             model.toggleCapture()
         })
@@ -128,7 +146,7 @@ struct CaptionPanel: View {
         VStack(spacing: 7) {
             GeometryReader { geometry in
                 Group {
-                    if geometry.size.width < 520 {
+                    if geometry.size.width < (model.interfaceLanguage == .simplifiedChinese || model.interfaceLanguage == .traditionalChinese ? 520 : 720) {
                         compactControls
                     } else {
                         expandedControls
@@ -138,7 +156,7 @@ struct CaptionPanel: View {
             }
             .frame(height: 24)
             if let status = controlStatus {
-                Text(status)
+                Text(L(status))
                     .font(.caption)
                     .foregroundStyle(status.contains("失败") ? Color.red : Color.secondary)
                     .lineLimit(1)
@@ -152,10 +170,10 @@ struct CaptionPanel: View {
         HStack(spacing: 10) {
             captureButton
             audioPicker
-            Toggle("字幕", isOn: captionVisibilityBinding)
+            Toggle(L("字幕"), isOn: captionVisibilityBinding)
                 .toggleStyle(.checkbox)
             translationPicker
-            Toggle("说话人", isOn: $model.diarizationEnabled)
+            Toggle(L("说话人"), isOn: $model.diarizationEnabled)
                 .toggleStyle(.checkbox)
             Spacer(minLength: 4)
             recordButton
@@ -174,7 +192,7 @@ struct CaptionPanel: View {
                     .font(.body)
             }
             .buttonStyle(.plain)
-            .help("输入来源：\(model.audioMode.rawValue)")
+            .help(L("输入来源：\(model.audioMode.rawValue)"))
             .disabled(model.whisper.isBusy || model.isSwitchingAudioMode || model.capture.isTransitioning)
             .popover(isPresented: compactPopoverBinding(for: .audio), arrowEdge: .bottom) {
                 compactAudioOptions
@@ -188,7 +206,7 @@ struct CaptionPanel: View {
             }
             .buttonStyle(.plain)
             .foregroundStyle(Color.primary)
-            .help("字幕")
+            .help(L("字幕"))
             .popover(isPresented: compactPopoverBinding(for: .caption), arrowEdge: .bottom) {
                 compactCaptionOptions
             }
@@ -202,7 +220,7 @@ struct CaptionPanel: View {
             }
             .buttonStyle(.plain)
             .foregroundStyle(Color.primary)
-            .help("翻译语言")
+            .help(L("翻译语言"))
             .popover(isPresented: compactPopoverBinding(for: .translation), arrowEdge: .bottom) {
                 compactTranslationOptions
             }
@@ -215,7 +233,7 @@ struct CaptionPanel: View {
             }
             .buttonStyle(.plain)
             .foregroundStyle(Color.primary)
-            .help("说话人断句")
+            .help(L("说话人断句"))
             .popover(isPresented: compactPopoverBinding(for: .speaker), arrowEdge: .bottom) {
                 compactSpeakerOptions
             }
@@ -291,7 +309,7 @@ struct CaptionPanel: View {
     private func compactOptionPanel<Content: View>(title: String,
                                                     @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title)
+            Text(L(title))
                 .font(.headline)
                 .padding(.horizontal, 4)
             Divider()
@@ -309,7 +327,7 @@ struct CaptionPanel: View {
             compactToolbarPopover = nil
         } label: {
             HStack {
-                Text(title)
+                Text(L(title))
                 Spacer()
                 if selected {
                     Image(systemName: "checkmark")
@@ -338,7 +356,7 @@ struct CaptionPanel: View {
         }
         .buttonStyle(.plain)
         .foregroundStyle(Color.primary)
-        .help(model.capture.isRunning ? "暂停识别" : "开始识别")
+        .help(model.capture.isRunning ? L("暂停识别") : L("开始识别"))
         .disabled(model.recording.isRecording || model.whisper.isBusy
                   || model.isSwitchingAudioMode || model.capture.isTransitioning)
     }
@@ -350,13 +368,13 @@ struct CaptionPanel: View {
         }
         .buttonStyle(.plain)
         .foregroundStyle(model.recording.isRecording ? Color.red : Color.primary)
-        .help(model.recording.isRecording ? "停止录音" : "开始录音")
+        .help(model.recording.isRecording ? L("停止录音") : L("开始录音"))
         .disabled(model.whisper.isBusy || model.isSwitchingAudioMode || model.capture.isTransitioning)
     }
 
     private var audioPicker: some View {
-        Picker("输入", selection: $model.audioMode) {
-            ForEach(AudioMode.allCases) { Text($0.rawValue).tag($0) }
+        Picker(L("输入"), selection: $model.audioMode) {
+            ForEach(AudioMode.allCases) { Text(L($0.rawValue)).tag($0) }
         }
         .labelsHidden()
         .frame(width: 96)
@@ -372,8 +390,8 @@ struct CaptionPanel: View {
     }
 
     private var translationPicker: some View {
-        Picker("翻译", selection: translationSelection) {
-            Text("不显示翻译").tag(hiddenTranslationSelection)
+        Picker(L("翻译"), selection: translationSelection) {
+            Text(L("不显示翻译")).tag(hiddenTranslationSelection)
             Divider()
             ForEach(LanguageOption.supported) { Text($0.name).tag($0.id) }
         }
@@ -400,7 +418,7 @@ struct CaptionPanel: View {
         Button(action: presentSettings) {
             Image(systemName: "slider.horizontal.3")
         }
-            .help("设置")
+            .help(L("设置"))
             .buttonStyle(.plain)
     }
 
@@ -442,7 +460,7 @@ struct CaptionPanel: View {
                                             .textSelection(.enabled)
                                     }
                                 } else if line.translated.isEmpty {
-                                    Text(model.translationError ?? "翻译中…")
+                                    Text(L(model.translationError ?? "翻译中…"))
                                         .font(.system(size: model.translationFontSize))
                                         .foregroundStyle(model.translationError == nil ? Color.secondary : Color.red)
                                 } else {
@@ -492,45 +510,52 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            Section("字幕") {
-                Picker("显示内容", selection: $model.displayMode) {
-                    ForEach(CaptionDisplayMode.allCases) { Text($0.rawValue).tag($0) }
+            Section(L("语言")) {
+                Picker(L("界面语言"), selection: $model.interfaceLanguage) {
+                    ForEach(InterfaceLanguage.allCases) { Text($0.title).tag($0) }
                 }
-                LabeledContent("原文字号") { Slider(value: $model.fontSize, in: 14...42, step: 1) }
-                LabeledContent("译文字号") { Slider(value: $model.translationFontSize, in: 12...36, step: 1) }
+                Text(L("界面语言与字幕翻译目标语言分别设置。"))
+                    .font(.caption).foregroundStyle(.secondary)
             }
-            Section("悬浮窗") {
-                LabeledContent("透明度") { Slider(value: $model.opacity, in: 0.35...1) }
-                Toggle("无字幕时自动隐藏", isOn: $model.autoHideEnabled)
-                LabeledContent("等待时间") {
+            Section(L("字幕")) {
+                Picker(L("显示内容"), selection: $model.displayMode) {
+                    ForEach(CaptionDisplayMode.allCases) { Text(L($0.rawValue)).tag($0) }
+                }
+                LabeledContent(L("原文字号")) { Slider(value: $model.fontSize, in: 14...42, step: 1) }
+                LabeledContent(L("译文字号")) { Slider(value: $model.translationFontSize, in: 12...36, step: 1) }
+            }
+            Section(L("悬浮窗")) {
+                LabeledContent(L("透明度")) { Slider(value: $model.opacity, in: 0.35...1) }
+                Toggle(L("无字幕时自动隐藏"), isOn: $model.autoHideEnabled)
+                LabeledContent(L("等待时间")) {
                     Stepper(value: $model.sleepDelayMinutes, in: 0.5...60, step: 0.5) {
-                        Text(model.sleepDelayMinutes.formatted(.number.precision(.fractionLength(0...1))) + " 分钟")
+                        Text(model.sleepDelayMinutes.formatted(.number.precision(.fractionLength(0...1))) + L(" 分钟"))
                             .monospacedDigit()
                     }
                 }
                 .disabled(!model.autoHideEnabled)
-                Text("隐藏后仍会继续监听；识别到新的语音时，字幕窗会自动淡入。")
+                Text(L("隐藏后仍会继续监听；识别到新的语音时，字幕窗会自动淡入。"))
                     .font(.caption).foregroundStyle(.secondary)
-                Text("直接拖动窗口可调整位置，拖动边缘可调整尺寸。")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
-            Section("系统") {
-                Toggle("在 Dock 与强制退出中显示", isOn: $model.showInDock)
-                Text("关闭时仅保留顶部菜单栏图标；开启后可在系统的强制退出窗口中找到 LiveCaption。")
+                Text(L("直接拖动窗口可调整位置，拖动边缘可调整尺寸。"))
                     .font(.caption).foregroundStyle(.secondary)
             }
-            Section("音频") {
-                Picker("输入来源", selection: $model.audioMode) {
-                    ForEach(AudioMode.allCases) { Text($0.rawValue).tag($0) }
+            Section(L("系统")) {
+                Toggle(L("在 Dock 与强制退出中显示"), isOn: $model.showInDock)
+                Text(L("关闭时仅保留顶部菜单栏图标；开启后可在系统的强制退出窗口中找到 LiveCaption。"))
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            Section(L("音频")) {
+                Picker(L("输入来源"), selection: $model.audioMode) {
+                    ForEach(AudioMode.allCases) { Text(L($0.rawValue)).tag($0) }
                 }
                 .disabled(model.whisper.isBusy || model.isSwitchingAudioMode || model.capture.isTransitioning)
             }
             if let request = model.translationPackRequest {
-                Section("翻译语言包") {
-                    LabeledContent("需要下载") {
-                        Text(request.description)
+                Section(L("翻译语言包")) {
+                    LabeledContent(L("需要下载")) {
+                        Text(L(request.description))
                     }
-                    Button("下载语言包") {
+                    Button(L("下载语言包")) {
                         translationDownloadStatus = "请在系统窗口中确认下载"
                         translationDownloadRequest = request
                         translationDownloadGeneration += 1
@@ -538,27 +563,27 @@ struct SettingsView: View {
                     }
                     .disabled(translationDownloadInProgress)
                     if let translationDownloadStatus {
-                        Text(translationDownloadStatus)
+                        Text(L(translationDownloadStatus))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
-                    Text("语言包由 macOS Translation 下载和管理；确认窗口会固定显示在设置窗口中。")
+                    Text(L("语言包由 macOS Translation 下载和管理；确认窗口会固定显示在设置窗口中。"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
-            Section("录音") {
-                Toggle("按说话人断句", isOn: $model.diarizationEnabled)
-                Toggle("停止录音后自动生成总结", isOn: $model.automaticSummary)
-                Picker("总结方式", selection: $model.summaryProvider) {
+            Section(L("录音")) {
+                Toggle(L("按说话人断句"), isOn: $model.diarizationEnabled)
+                Toggle(L("停止录音后自动生成总结"), isOn: $model.automaticSummary)
+                Picker(L("总结方式"), selection: $model.summaryProvider) {
                     ForEach(SummaryProvider.allCases) { provider in
-                        Text(provider.title).tag(provider)
+                        Text(L(provider.title)).tag(provider)
                     }
                 }
                 .disabled(model.summary.isSummarizing)
                 if model.summaryProvider == .customCLI {
-                    LabeledContent("程序") {
-                        Button(model.customSummaryCLIPath.isEmpty ? "选择…" : "更换…",
+                    LabeledContent(L("程序")) {
+                        Button(model.customSummaryCLIPath.isEmpty ? L("选择…") : L("更换…"),
                                action: model.chooseSummaryCLI)
                     }
                     if !model.customSummaryCLIPath.isEmpty {
@@ -567,44 +592,44 @@ struct SettingsView: View {
                             .foregroundStyle(.secondary)
                             .textSelection(.enabled)
                     }
-                    TextField("启动参数（可选）", text: $model.customSummaryCLIArguments)
+                    TextField(L("启动参数（可选）"), text: $model.customSummaryCLIArguments)
                         .textFieldStyle(.roundedBorder)
-                    Text("应用会把总结要求和字幕文本通过标准输入交给该程序，并读取其标准输出作为总结。")
+                    Text(L("应用会把总结要求和字幕文本通过标准输入交给该程序，并读取其标准输出作为总结。"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                Text(model.summary.availabilityDescription(for: model.summaryProvider,
-                                                           customExecutablePath: model.customSummaryCLIPath))
+                Text(L(model.summary.availabilityDescription(for: model.summaryProvider,
+                                                           customExecutablePath: model.customSummaryCLIPath)))
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                LabeledContent("保存位置") {
-                    Button("选择…", action: model.chooseSaveDirectory)
+                LabeledContent(L("保存位置")) {
+                    Button(L("选择…"), action: model.chooseSaveDirectory)
                         .disabled(model.recording.isRecording)
                 }
                 Text(model.saveDirectory.path)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .textSelection(.enabled)
-                Text("选择“两者”时，电脑音频和麦克风会分别保存为两个 WAV 文件。CLI 只接收字幕文本，不接收音频；是否联网由所选 CLI 自身决定。")
+                Text(L("选择“两者”时，电脑音频和麦克风会分别保存为两个 WAV 文件。CLI 只接收字幕文本，不接收音频；是否联网由所选 CLI 自身决定。"))
                     .font(.caption).foregroundStyle(.secondary)
             }
             Section("Whisper") {
-                Picker("识别模型", selection: $model.whisperModel) {
-                    ForEach(WhisperModel.allCases) { Text($0.title).tag($0) }
+                Picker(L("识别模型"), selection: $model.whisperModel) {
+                    ForEach(WhisperModel.allCases) { Text(L($0.title)).tag($0) }
                 }
                 .disabled(model.whisper.isBusy)
-                Text(model.whisper.statusLabel(for: model.whisperModel))
+                Text(L(model.whisper.statusLabel(for: model.whisperModel)))
                     .font(.caption)
                     .foregroundStyle(model.whisper.state.isFailure ? Color.red : Color.secondary)
                 if let progress = model.whisper.downloadProgress, model.whisper.state == .downloading {
                     ProgressView(value: progress)
                 }
-                Text("模型首次使用时下载，之后完全离线运行。高精度模型更准确，但占用更多内存。")
+                Text(L("模型首次使用时下载，之后完全离线运行。高精度模型更准确，但占用更多内存。"))
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
-        .frame(width: 460, height: 600)
+        .frame(width: 560, height: 640)
         .background {
             TranslationDownloadHost(request: translationDownloadRequest,
                                     generation: translationDownloadGeneration) { generation, error in
@@ -777,18 +802,18 @@ struct MenuBarMenu: View {
     @Environment(\.openSettings) private var openSettings
 
     var body: some View {
-        Button(model.capture.isRunning ? "停止识别" : "开始识别") {
+        Button(model.capture.isRunning ? L("停止识别") : L("开始识别")) {
             model.toggleCapture()
         }
         .disabled(model.recording.isRecording || model.capture.isTransitioning)
-        Button(model.recording.isRecording ? "停止录音" : "开始录音") {
+        Button(model.recording.isRecording ? L("停止录音") : L("开始录音")) {
             model.toggleRecording()
         }
         Divider()
-        Button(model.recording.lastResult == nil ? "打开录音文件夹" : "打开最近录音") {
+        Button(model.recording.lastResult == nil ? L("打开录音文件夹") : L("打开最近录音")) {
             model.openLastRecording()
         }
-        Button(model.isCaptionWindowVisible ? "隐藏字幕窗" : "显示字幕窗") {
+        Button(model.isCaptionWindowVisible ? L("隐藏字幕窗") : L("显示字幕窗")) {
             if model.isCaptionWindowVisible {
                 model.hideCaptionWindow()
             } else {
@@ -797,12 +822,12 @@ struct MenuBarMenu: View {
             }
         }
         Divider()
-        Button("设置…") {
+        Button(L("设置…")) {
             NSApp.activate()
             openSettings()
             bringSettingsWindowForward()
         }
-        Button("退出中文版") { NSApp.terminate(nil) }
+        Button(L("退出 LiveCaption_ZH-CN")) { NSApp.terminate(nil) }
     }
 }
 

@@ -3,28 +3,58 @@ import Foundation
 enum InterfaceLanguage: String, CaseIterable, Identifiable {
     case simplifiedChinese = "zh-Hans"
     case english = "en"
+    case traditionalChinese = "zh-Hant"
+    case japanese = "ja"
+    case korean = "ko"
+    case french = "fr"
+    case german = "de"
+    case spanish = "es"
     var id: String { rawValue }
-    var title: String { self == .english ? "English" : "简体中文" }
+    var title: String {
+        switch self {
+        case .simplifiedChinese: "简体中文"
+        case .traditionalChinese: "繁體中文"
+        case .english: "English"
+        case .japanese: "日本語"
+        case .korean: "한국어"
+        case .french: "Français"
+        case .german: "Deutsch"
+        case .spanish: "Español"
+        }
+    }
     static var current: Self {
         if let saved = UserDefaults.standard.string(forKey: "interfaceLanguage"),
            let language = Self(rawValue: saved) { return language }
-        return Locale.preferredLanguages.first?.hasPrefix("zh") == true ? .simplifiedChinese : .english
+        for preferred in Locale.preferredLanguages {
+            if preferred.hasPrefix("zh") {
+                return preferred.contains("Hant") || preferred.contains("TW") || preferred.contains("HK") ? .traditionalChinese : .simplifiedChinese
+            }
+            if let match = allCases.first(where: { preferred.hasPrefix($0.rawValue) }) { return match }
+        }
+        return .english
     }
 }
 
 /// UI copy only. Never pass recognized speech, file paths or exported documents here.
 func L(_ text: String) -> String {
-    guard InterfaceLanguage.current == .english else { return text }
-    if let translated = InterfaceCopy.english[text] { return translated }
+    let language = InterfaceLanguage.current
+    guard language != .simplifiedChinese else { return text }
+    if language == .traditionalChinese {
+        return text.applyingTransform(StringTransform("Hans-Hant"), reverse: false) ?? text
+    }
+    let dictionary = language == .english ? InterfaceCopy.english : InterfaceCopy.other[language, default: [:]]
+    if let translated = dictionary[text] { return translated }
     // Status messages combine translated labels with model names, progress and
     // system errors. Longest phrases first prevent partial-label collisions.
-    return InterfaceCopy.fragments.reduce(text) { result, pair in
+    return dictionary.sorted { $0.key.count > $1.key.count }.reduce(text) { result, pair in
         result.replacingOccurrences(of: pair.key, with: pair.value)
     }
 }
 
 private enum InterfaceCopy {
+    static let other = AdditionalInterfaceCopy.translations
     static let english: [String: String] = [
+        "继续": "Continue", "退出 LiveCaption": "Quit LiveCaption",
         "界面语言": "Interface language", "语言": "Language",
         "界面语言与字幕翻译目标语言分别设置。": "Interface language is independent of the translation target.",
         "剪切": "Cut", "复制": "Copy", "粘贴": "Paste", "全选": "Select All",
@@ -33,7 +63,7 @@ private enum InterfaceCopy {
         "不显示": "Off", "不显示翻译": "Translation off", "暂停识别": "Pause recognition",
         "开始识别": "Start recognition", "停止识别": "Stop recognition",
         "停止录音": "Stop recording", "开始录音": "Start recording", "输入": "Input", "翻译": "Translation",
-        "设置": "Settings", "设置…": "Settings…", "退出中文版": "Quit Chinese Version",
+        "设置": "Settings", "设置…": "Settings…", "退出 LiveCaption_ZH-CN": "Quit LiveCaption_ZH-CN",
         "正在停止识别…": "Stopping recognition…", "正在启动识别…": "Starting recognition…",
         "正在下载并加载说话人模型…": "Downloading and loading speaker model…",
         "翻译中…": "Translating…", "识别准备失败，请在设置中查看模型状态": "Unable to prepare recognition. Check model status in Settings.",

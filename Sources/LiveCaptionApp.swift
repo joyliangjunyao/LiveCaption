@@ -10,7 +10,7 @@ struct LiveCaptionApp: App {
     }
 
     var body: some Scene {
-        Window("LiveCaption", id: "caption") {
+        Window("中文版", id: "caption") {
             CaptionPanel(model: model)
         }
         .defaultSize(width: 340, height: 108)
@@ -37,7 +37,7 @@ struct LiveCaptionApp: App {
             }
         }
 
-        MenuBarExtra("LiveCaption", systemImage: model.recording.isRecording
+        MenuBarExtra("中文版", systemImage: model.recording.isRecording
                      ? "record.circle.fill"
                      : (model.capture.isRunning ? "captions.bubble.fill" : "captions.bubble")) {
             MenuBarMenu(model: model)

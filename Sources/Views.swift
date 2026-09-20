@@ -802,7 +802,7 @@ struct MenuBarMenu: View {
             openSettings()
             bringSettingsWindowForward()
         }
-        Button("退出 LiveCaption") { NSApp.terminate(nil) }
+        Button("退出中文版") { NSApp.terminate(nil) }
     }
 }
 

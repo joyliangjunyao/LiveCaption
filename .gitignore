@@ -1,0 +1,14 @@
+.build/
+.tools/
+Vendor/whisper.cpp/build-livecaption/
+dist/
+.DS_Store
+.downloads/
+*.wav
+*.pcm
+*.download
+.env
+.env.*
+*.pem
+*.key
+xcuserdata/

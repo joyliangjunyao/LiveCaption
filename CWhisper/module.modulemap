@@ -1,0 +1,4 @@
+module CWhisper [system] {
+    umbrella "include"
+    export *
+}

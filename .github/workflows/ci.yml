@@ -1,0 +1,17 @@
+name: Build and test
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  macos:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install CMake if missing
+        run: command -v cmake || brew install cmake
+      - name: Build application
+        run: ./scripts/build-app.sh
+      - name: Test
+        run: swift test
+      - name: Validate package
+        run: codesign --verify --deep --strict dist/LiveCaption.app

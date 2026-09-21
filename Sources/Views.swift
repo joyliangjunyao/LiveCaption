@@ -78,7 +78,7 @@ struct CaptionPanel: View {
         .onAppear { showLanguageChoice = !hasChosenLanguage }
         .sheet(isPresented: $showLanguageChoice) {
             VStack(alignment: .leading, spacing: 20) {
-                Text(L("选择界面语言 / Choose interface language")).font(.headline)
+                Text("选择界面语言 / Choose interface language").font(.headline)
                 Picker(L("界面语言"), selection: $model.interfaceLanguage) {
                     ForEach(InterfaceLanguage.allCases) { Text($0.title).tag($0) }
                 }
@@ -376,8 +376,9 @@ struct CaptionPanel: View {
         Picker(L("输入"), selection: $model.audioMode) {
             ForEach(AudioMode.allCases) { Text(L($0.rawValue)).tag($0) }
         }
+        .id(model.interfaceLanguage)
         .labelsHidden()
-        .frame(width: 96)
+        .frame(width: model.interfaceLanguage == .simplifiedChinese || model.interfaceLanguage == .traditionalChinese ? 96 : 145)
         .disabled(model.whisper.isBusy || model.isSwitchingAudioMode || model.capture.isTransitioning)
     }
 
@@ -395,8 +396,9 @@ struct CaptionPanel: View {
             Divider()
             ForEach(LanguageOption.supported) { Text($0.name).tag($0.id) }
         }
+        .id(model.interfaceLanguage)
         .labelsHidden()
-        .frame(width: 105)
+        .frame(width: model.interfaceLanguage == .simplifiedChinese || model.interfaceLanguage == .traditionalChinese ? 105 : 185)
     }
 
     private var hiddenTranslationSelection: String { "__translation_hidden__" }
@@ -521,6 +523,7 @@ struct SettingsView: View {
                 Picker(L("显示内容"), selection: $model.displayMode) {
                     ForEach(CaptionDisplayMode.allCases) { Text(L($0.rawValue)).tag($0) }
                 }
+                .id(model.interfaceLanguage)
                 LabeledContent(L("原文字号")) { Slider(value: $model.fontSize, in: 14...42, step: 1) }
                 LabeledContent(L("译文字号")) { Slider(value: $model.translationFontSize, in: 12...36, step: 1) }
             }
@@ -548,6 +551,7 @@ struct SettingsView: View {
                 Picker(L("输入来源"), selection: $model.audioMode) {
                     ForEach(AudioMode.allCases) { Text(L($0.rawValue)).tag($0) }
                 }
+                .id(model.interfaceLanguage)
                 .disabled(model.whisper.isBusy || model.isSwitchingAudioMode || model.capture.isTransitioning)
             }
             if let request = model.translationPackRequest {
@@ -580,6 +584,7 @@ struct SettingsView: View {
                         Text(L(provider.title)).tag(provider)
                     }
                 }
+                .id(model.interfaceLanguage)
                 .disabled(model.summary.isSummarizing)
                 if model.summaryProvider == .customCLI {
                     LabeledContent(L("程序")) {
@@ -617,6 +622,7 @@ struct SettingsView: View {
                 Picker(L("识别模型"), selection: $model.whisperModel) {
                     ForEach(WhisperModel.allCases) { Text(L($0.title)).tag($0) }
                 }
+                .id(model.interfaceLanguage)
                 .disabled(model.whisper.isBusy)
                 Text(L(model.whisper.statusLabel(for: model.whisperModel)))
                     .font(.caption)

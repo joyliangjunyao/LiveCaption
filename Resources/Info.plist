@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
   <key>CFBundleDevelopmentRegion</key><string>zh_CN</string>
+  <key>CFBundleLocalizations</key><array>
+    <string>zh-Hans</string><string>zh-Hant</string><string>en</string>
+    <string>ja</string><string>ko</string><string>fr</string><string>de</string><string>es</string>
+  </array>
   <key>CFBundleExecutable</key><string>LiveCaption</string>
   <key>CFBundleIdentifier</key><string>com.wishyoujoy.livecaption</string>
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>

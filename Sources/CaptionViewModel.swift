@@ -5,6 +5,9 @@ import Translation
 
 @MainActor
 final class CaptionViewModel: ObservableObject {
+    @Published var interfaceLanguage = InterfaceLanguage.current {
+        didSet { UserDefaults.standard.set(interfaceLanguage.rawValue, forKey: "interfaceLanguage") }
+    }
     private struct RecentRecognition {
         let source: AudioSource
         var text: String
@@ -301,8 +304,8 @@ final class CaptionViewModel: ObservableObject {
 
     func chooseSaveDirectory() {
         let panel = NSOpenPanel()
-        panel.title = "选择录音和文本的保存位置"
-        panel.prompt = "选择"
+        panel.title = L("选择录音和文本的保存位置")
+        panel.prompt = L("选择")
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.canCreateDirectories = true
@@ -317,8 +320,8 @@ final class CaptionViewModel: ObservableObject {
 
     func chooseSummaryCLI() {
         let panel = NSOpenPanel()
-        panel.title = "选择用于总结的命令行程序"
-        panel.prompt = "选择"
+        panel.title = L("选择用于总结的命令行程序")
+        panel.prompt = L("选择")
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = false

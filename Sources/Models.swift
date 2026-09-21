@@ -125,7 +125,7 @@ struct TranslationPackRequest: Equatable {
     let targetLanguage: String
 
     var description: String {
-        let locale = Locale.current
+        let locale = Locale(identifier: InterfaceLanguage.current.rawValue)
         let source = locale.localizedString(forLanguageCode: sourceLanguage) ?? sourceLanguage
         let target = locale.localizedString(forLanguageCode: targetLanguage) ?? targetLanguage
         return "\(source) → \(target)"

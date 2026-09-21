@@ -36,8 +36,7 @@ enum InterfaceLanguage: String, CaseIterable, Identifiable {
 }
 
 /// UI copy only. Never pass recognized speech, file paths or exported documents here.
-func L(_ text: String) -> String {
-    let language = InterfaceLanguage.current
+func L(_ text: String, language: InterfaceLanguage = .current) -> String {
     guard language != .simplifiedChinese else { return text }
     if language == .traditionalChinese {
         return text.applyingTransform(StringTransform("Hans-Hant"), reverse: false) ?? text
@@ -51,10 +50,10 @@ func L(_ text: String) -> String {
     }
 }
 
-private enum InterfaceCopy {
+enum InterfaceCopy {
     static let other = AdditionalInterfaceCopy.translations
     static let english: [String: String] = [
-        "继续": "Continue", "退出 LiveCaption": "Quit LiveCaption",
+        "继续": "Continue", "退出 LiveCaption": "Quit LiveCaption", "正在加载 ": "Loading ",
         "界面语言": "Interface language", "语言": "Language",
         "界面语言与字幕翻译目标语言分别设置。": "Interface language is independent of the translation target.",
         "剪切": "Cut", "复制": "Copy", "粘贴": "Paste", "全选": "Select All",

@@ -6,6 +6,19 @@ macOS 15+ 原生实时字幕、翻译与录音悬浮窗。支持电脑音频、�
 
 ## 构建与启动
 
+### 界面语言
+
+首次启动可选择简体中文、繁體中文、English、日本語、한국어、Français、Deutsch 或 Español；之后可在设置顶部的语言选项中随时更改，无需重启。选择会保存在本机，与字幕翻译目标语言互不影响。应用菜单、工具栏、设置和模型状态提示已本地化；macOS 提供的系统菜单与权限弹窗遵循系统语言。此功能不修改识别文本、音频处理或总结内容的语言。
+
+轻量语言检查（不加载语音模型）：
+
+```bash
+swiftc Sources/InterfaceLanguage.swift Sources/AdditionalInterfaceCopy.swift scripts/check-interface-language.swift -o /tmp/livecaption-language-check
+/tmp/livecaption-language-check
+```
+
+### 编译
+
 需要 macOS 15+、Swift 6+（Xcode 或 Command Line Tools）和 CMake。
 首次使用开发工具须先完成 Apple 的安装及许可证流程。Apple Intelligence
 总结另外需要受支持的系统、硬件和已启用的本机模型。项目包含 vendor 源码，
